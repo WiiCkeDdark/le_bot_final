@@ -74,6 +74,9 @@ Other strategies are coming.
 ## Contributions
 
 Contributions and feature requests are welcome. Check the issues page for more details.
+Contributors : 
+- Jules Mourgues Haroche
+- Antoine de Parthenay
 
 ## Contact
 
