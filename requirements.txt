@@ -5,3 +5,4 @@ pytz
 websockets
 tqdm
 python-telegram-bot
+quantstats
