@@ -1,6 +1,6 @@
 # Importation des bibliothèques nécessaires
-import ccxt
-import ccxt.async_support as ccxt_async
+import ccxt  # for retrieving data
+import ccxt.async_support as ccxt_async # for trading
 import websockets  # For WebSocket in an async manner
 import asyncio
 import json
@@ -13,25 +13,25 @@ from modules.algo_gen import genetic_algorithm
 import pytz
 import os
 from telegram import Bot
-from telegram.ext import Updater
 import math
-from modules.best_parameters_crossing_ema import getting_best_parameters_crossing_ema
+from modules.getting_best_para import getting_best_parameters_crossing_ema
 
 # Définition du fuseau horaire global en UTC
 pytz.utc
 
 class strategy:
     def __init__(self, data, telegram_bot):
+        # Initialisation de la stratégie avec les données historiques et le bot Telegram
         self.data = data  # Données historiques pour la stratégie
         self.exchange_actions = exchanges_action()
         self.telegram_bot = telegram_bot
 
-    async def telegram_message(self, message):
+    async def telegram_message(self, message): # a changer et mettre dans la class bot
         chat_id = '-4198741506'  # Replace with your chat ID
         # await self.telegram_bot.send_message(chat_id=chat_id, text=message)
 
     async def define_ma(self, genetic_algorithm_use=False):
-
+        # Définit les meilleures moyennes mobiles pour la stratégie, avec option d'utilisation d'un algorithme génétique
         when = datetime.datetime.now()
 
         settings = {
@@ -67,7 +67,7 @@ class strategy:
             self.open_ma, self.close_ma = await getting_best_parameters_crossing_ema(symbols, interval, when, backtest_time, settings)
     
     async def signal(self, df_all):
-
+        # Génère un signal de trading en fonction des moyennes mobiles
         self.df_all = df_all
         self.df_all['EMA_open'] = self.df_all['Open'].ewm(span=self.open_ma, adjust=False).mean()
         self.df_all['EMA_close'] = self.df_all['Close'].ewm(span=self.close_ma, adjust=False).mean()
@@ -90,7 +90,7 @@ class strategy:
         return self.df_all
     
     async def determine_action(self, last_minute):
-        
+        # Détermine l'action de trading (achat/vente) en fonction du dernier signal et de la position actuelle
         if await self.exchange_actions.retrieve_position() == []:
             if last_minute['Target'] == 1 :
                 await self.exchange_actions.order('buy', 'limit')
@@ -109,7 +109,7 @@ class strategy:
             return 0
 
     async def retrieve_data_last_day(self):
-        # Récupération des données du dernier jour via ccxt depuis Binance
+        # Récupère les données du dernier jour via ccxt depuis Binance ------- A MODIFIER n'est plus utilisé
         symbol = 'ETH/USDT'
         timeframe = '1m'  # Intervalle d'une minute
         exchange = getattr(ccxt, "binance")({
@@ -158,7 +158,7 @@ class bot:
         self.retry_delay = 10  # Délai entre les tentatives de reconnexion en secondes
        
     async def on_message(self, ws, message):
-        # Traitement des messages reçus via WebSocket
+        # Gère les messages WebSocket reçus pour les données en temps réel
         data = json.loads(message)
         if 'k' not in data:
             return
@@ -195,18 +195,20 @@ class bot:
         print(self.df_all.tail(3))
 
     def on_error(self, ws, error):
+        # Gère les erreurs WebSocket
         print(error)
 
-    def on_close(self, ws, e, z):
+    async def on_close(self, ws, e, z):
+        # Gère la fermeture de la connexion WebSocket
         print("### closed ###")
         # save the data to a file
         self.df_all.to_csv('ethusdt.csv')
         # close all possitions
-        self.strategy.exchanges_action_antoine.close_positions()
-        self.strategy.exchanges_action_jules.close_positions()
-        self.retry_connection()
+        await self.strategy.exchanges_action.close_positions()
+        await self.retry_connection()
 
     def on_open(self, ws):
+        # Gère l'ouverture de la connexion WebSocket
         print("WS opened")
         
         # Abonnement aux mises à jour de la paire ETH/USDT sur Binance via WebSocket
@@ -217,8 +219,8 @@ class bot:
         }
         ws.send(json.dumps(params))
         
-    def retry_connection(self):
-        # Tentative de reconnexion en cas de déconnexion
+    async def retry_connection(self):
+        # Tentatives de reconnexion en cas de déconnexion du WebSocket
         if self.retry_count < self.max_retries:
             time.sleep(self.retry_delay)
             self.retry_count += 1
@@ -228,23 +230,34 @@ class bot:
             print("Reached maximum retry attempts. Not retrying anymore.")
 
     async def connect(self):
+        # Establish the WebSocket connection to receive real-time data
         uri = "wss://stream.binance.com:9443/ws/ethusdt@kline_1m"
         await self.strategy.define_ma(self.genetic_algorithm_use)
         async with websockets.connect(uri) as websocket:
+            self.websocket = websocket
             await self.strategy.telegram_message(f"Bot started at {datetime.datetime.now()}\n with Open MA : {self.strategy.open_ma} and Close MA : {self.strategy.close_ma}")
             await self.handle_websocket(websocket)
 
     async def handle_websocket(self, websocket):
-        # Subscribe or listen to the WebSocket stream
-        await websocket.send(json.dumps({"method": "SUBSCRIBE", "params": ["ethusdt@kline_1m"], "id": 1}))
-        async for message in websocket:
-            # Process message
-            await self.on_message(websocket, message)
+        try:
+            await websocket.send(json.dumps({"method": "SUBSCRIBE", "params": ["ethusdt@kline_1m"], "id": 1}))
+            async for message in websocket:
+                await self.on_message(websocket, message)
+        except asyncio.CancelledError:
+            print("WebSocket task was cancelled.")
+        except Exception as e:
+            print(f"Error in WebSocket handling: {e}")
+        finally:
+            await self.close_connection()
 
-    async def close_connection(self, websocket):
-        # Fermeture de la connexion WebSocket
+    async def close_connection(self):
+        # Closing the WebSocket connection
         await self.strategy.telegram_message("Bot stopped")
-        await websocket.close()
+        if self.websocket:
+            await self.websocket.close()
+        # Closing the async exchange session
+        await self.strategy.exchange_actions.exchange.close()
+
 
 class exchanges_action: 
     def __init__(self):
@@ -298,9 +311,6 @@ class exchanges_action:
 
             price_multiplier = 0.9999999 if side == 'buy' else 1.0000001
             price = float(btc_bid if side == 'buy' else btc_ask) * price_multiplier
-
-            print(quantity)
-            print(price)
         
             type = type # or 'market'
             side = side  # or 'sell
@@ -316,7 +326,7 @@ class exchanges_action:
         open_pos = self.exchange.fetch_positions()
         return open_pos
     
-    def close_positions(self):
+    async def close_positions(self): # a revoir
         positions = self.retrieve_position()
         for pos in positions:
             if pos['symbol'] == self.symbol:
@@ -335,8 +345,17 @@ class reporting:
         pass
 
 async def main(genetic_algorithm_use=False):
-    running_bot = bot(genetic_algorithm_use)
-    await running_bot.connect()
-
+    try:
+        running_bot = bot(genetic_algorithm_use)
+        await running_bot.connect()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        await running_bot.close_connection()
 if __name__ == "__main__":
-    asyncio.run(main(genetic_algorithm_use=True))
+    try:
+        asyncio.run(main(genetic_algorithm_use=True))
+    except KeyboardInterrupt:
+        print("Program stopped manually.")
+    except Exception as e:
+        print(f"Unexpected error: {e}")

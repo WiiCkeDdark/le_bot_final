@@ -8,8 +8,9 @@ This crypto trading bot is designed for automated trading on cryptocurrency exch
 ## Features
 
 - Real-time data streaming with WebSocket.
-- EMA-based trading strategy.
+- EMA-based trading strategy. (strategy which works moderately but other more robust strategies are being developed, including one in partnership with a thesis)
 - Supports automated trading Futures (Long and Short) on OKX exchange.
+- Optimized costs to place most orders as a market maker.
 - Telegram notifications for trades and updates.
 - Genetic algorithm for trading parameter optimization.
 - Historical data scraping for strategy backtesting.
@@ -63,6 +64,7 @@ To perform trading operations on OKX, you need to create an API key through the 
 ## Strategy Overview
 
 The bot uses EMAs to determine buy or sell signals, optimized with a genetic algorithm.
+Other strategies are coming.
 
 ## Disclaimer
 
@@ -81,3 +83,11 @@ For queries or assistance, open an issue in the repository.
 
 This trading bot is designed to run on a server environment, utilizing Docker for containerization. This ensures easy deployment and consistent operation across different systems. The Docker setup encapsulates all necessary dependencies, making it straightforward to deploy the bot on any server that supports Docker.
 The Docker configuration is maintained in the "Dockerfile".
+
+
+## Working In Progress 
+
+- We realized a bias in our strategy backtest, which led us to revise our strategies. We are working on a machine learning strategy with XGBoost and a daily optimization of the model parameters using a genetic algorithm, allowing us to apply the best model to the following day.
+- We chose to trade in minutes, which led us to incur a significant amount of transaction fees, thus impacting performance (optimization during order placement to minimize orders with taker fees).
+- Comprehensive reporting of the day, week, month, and year to date.
+- Interactivity with the Telegram bot.

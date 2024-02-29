@@ -90,4 +90,4 @@ def get_data(exchange_id, max_retries, symbol, timeframe, sincedelta, limit):
 
 if __name__ == "__main__":
 
-    scrape_candles_to_csv('BTC_usdt_1m.csv', 'binance', 3, 'BTC/USDT', '1m', '2016-01-0100:00:00Z', 1000)
+    scrape_candles_to_csv('BTC_usdt_1d.csv', 'binance', 3, 'BTC/USDT', '1d', '2024-01-0100:00:00Z', 1000)
