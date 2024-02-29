@@ -8,7 +8,7 @@ This crypto trading bot is designed for automated trading on cryptocurrency exch
 ## Features
 
 - Real-time data streaming with WebSocket.
-- EMA-based trading strategy. (strategy which works moderately but other more robust strategies are being developed, including one in partnership with a thesis)
+- EMA-based trading strategy. (strategy which works moderately but other more robust strategies are being developed, including one in partnership with a thesis (Lorette Danilo))
 - Supports automated trading Futures (Long and Short) on OKX exchange.
 - Optimized costs to place most orders as a market maker.
 - Telegram notifications for trades and updates.
