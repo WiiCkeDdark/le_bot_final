@@ -1,0 +1,5 @@
+data/*
+strategy/crossing_ema/__pycache__
+modules/__pycache__
+keys.json
+myvenv/
