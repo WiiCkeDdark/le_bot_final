@@ -41,6 +41,8 @@ To use Telegram notifications in the bot, you need to create a Telegram Bot and 
 3. **Get the API Token**: After creating the bot, BotFather will provide you with an API token. This token is a unique identifier and a key to access the Telegram API. Make sure to keep it secure.
 4. **Configure the Token in Your Bot**: Integrate this token into your trading bot's configuration, allowing it to send messages via your Telegram bot.
 
+(You can find the actual channel here : https://t.me/+Wb-TlUKPmQw2YjJk)
+
 ### Creating an OKX API
 
 To perform trading operations on OKX, you need to create an API key through the OKX platform. Follow these steps:
