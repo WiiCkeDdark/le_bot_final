@@ -90,7 +90,7 @@ The Docker configuration is maintained in the "Dockerfile".
 
 ## Working In Progress 
 
-- We realized a bias in our strategy backtest, which led us to revise our strategies. We are working on a machine learning strategy with XGBoost and a daily optimization of the model parameters using a genetic algorithm, allowing us to apply the best model to the following day.
+- We realized a bias in our strategy backtest, which led us to revise our strategies. We are working on a machine learning strategy with XGBoost (Heavily inspired by: "https://www.kaggle.com/code/vbmokin/crypto-btc-advanced-analysis-forecasting") and a daily optimization of the model parameters using a genetic algorithm, allowing us to apply the best model to the following day.
 - We chose to trade in minutes, which led us to incur a significant amount of transaction fees, thus impacting performance (optimization during order placement to minimize orders with taker fees).
 - Comprehensive reporting of the day, week, month, and year to date.
 - Interactivity with the Telegram bot.
